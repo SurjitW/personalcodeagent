@@ -105,6 +105,163 @@ The agent solves complex software engineering tasks by inspecting codebases, pla
 
 ---
 
+Implementation Plan: Autonomous Software Engineering Agent Platform
+Transform the codebase into a modular, production-ready Autonomous Software Engineering Agent Platform following the Master Development Prompt specifications.
+
+Proposed Architecture & Directory Structure
+
+autonomous-coding-agent/
+├── app/                        # FastAPI REST API & WebSocket service
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI application entrypoint
+│   ├── routes.py               # Task submission, status, log streaming endpoints
+│   └── schemas.py              # Pydantic models for API request/response
+├── agent_core/                 # Central Multi-Agent Orchestration Core
+│   ├── __init__.py
+│   ├── orchestrator.py         # Autonomous SDLC orchestrator & lifecycle manager
+│   ├── state.py                # Agent state, task progress, status transitions
+│   ├── workflow.py             # State machine graph implementing the full SDLC
+│   ├── memory.py               # Short-term and long-term project memory
+│   └── agents/                 # Specialized lifecycle agents
+│       ├── __init__.py
+│       ├── planner.py          # Requirements decomposition & planning agent
+│       ├── architect.py        # System architecture & ADR design agent
+│       ├── coder.py            # Production code generation agent
+│       ├── tester.py           # Unit/Integration/E2E test generation agent
+│       ├── debugger.py         # Autonomous test-fix loop agent
+│       ├── security.py         # SAST, secret, and vulnerability validation agent
+│       └── deployment.py       # Containerization, CI/CD, and deployment agent
+├── sandbox/                    # Secure execution layer
+│   ├── __init__.py
+│   ├── docker_manager.py       # Docker SDK container isolation with CPU/mem limits
+│   └── executor.py             # Resilient execution engine (Docker with secure host fallback)
+├── repository/                 # Repository intelligence
+│   ├── __init__.py
+│   ├── analyzer.py             # Project & tech-stack analysis generating repository-analysis.md
+│   └── scanner.py              # AST parser, symbol indexer, and dependency inspector
+├── llm/                        # Multi-LLM provider abstraction & routing
+│   ├── __init__.py
+│   ├── provider.py             # Abstract Base Provider with token/cost tracking
+│   ├── router.py               # LLM router with fallback chain & provider switching
+│   └── providers/              # Concrete model providers
+│       ├── __init__.py
+│       ├── openai_provider.py
+│       ├── claude_provider.py
+│       ├── gemini_provider.py
+│       ├── qwen_provider.py
+│       ├── kimi_provider.py
+│       ├── deepseek_provider.py
+│       ├── openrouter_provider.py
+│       └── mock_provider.py    # Zero-dependency deterministic offline provider
+├── testing/                    # Test generation & verification
+│   ├── __init__.py
+│   ├── test_generator.py       # Automated test suite generator (pytest/unittest/Jest)
+│   ├── test_runner.py          # Test execution engine with coverage & failure parsing
+│   └── browser_tester.py       # Chrome/Playwright UI testing & screenshot capture
+├── security/                   # Security scanning engine
+│   ├── __init__.py
+│   └── scanner.py              # AST security scanner, secret detection & SAST rules
+├── deployment/                 # Deployment engine
+│   ├── __init__.py
+│   └── deployer.py             # Dockerfile, docker-compose & K8s manifest generator & verifier
+├── prompts/                    # Markdown prompt management system
+│   ├── planner.md
+│   ├── architect.md
+│   ├── coder.md
+│   ├── tester.md
+│   ├── debugger.md
+│   ├── security.md
+│   └── deployment.md
+├── skills/                     # Modular skills directory
+│   ├── python-api-builder/
+│   │   └── SKILL.md
+│   ├── react-builder/
+│   │   └── SKILL.md
+│   └── security-review/
+│       └── SKILL.md
+├── docs/                       # Auto-generated project documents
+│   ├── requirements.md
+│   ├── implementation-plan.md
+│   ├── architecture.md
+│   ├── testing-plan.md
+│   └── security-plan.md
+├── reports/                    # Lifecycle execution reports
+│   ├── task-report.md
+│   ├── test-report.md
+│   ├── security-report.md
+│   └── engineering-report.md
+├── Agent.md                    # Project-specific AI configuration and rules
+├── SKILL.md                    # Root skill catalog and specification
+├── requirements.txt            # Python dependencies (FastAPI, Docker, Pydantic, etc.)
+├── docker-compose.yml          # Container stack (API, PostgreSQL, Redis, Sandbox)
+├── main.py                     # Unified CLI & API entrypoint
+└── test_platform.py            # Comprehensive test suite covering orchestrator & all modules
+User Review Required
+IMPORTANT
+
+Standard library fallback support: While requirements.txt specifies production libraries (fastapi, pydantic, docker, sqlalchemy), the core platform modules will be crafted with resilient fallback shims so the entire system can execute and pass unit tests even in minimal environments where external wheels have not yet been installed via pip.
+Backward compatibility: The existing main.py CLI options (--openrouter, --model, --mock, --workspace, etc.) will be retained and extended with the new full SDLC orchestrator, server mode (--server), and subcommands.
+Proposed Changes
+1. LLM Abstraction & Router (llm/)
+[NEW] llm/provider.py: Define LLMProvider protocol, token/cost tracker, and context management.
+[NEW] llm/router.py: LLMRouter supporting primary/fallback chain, retry policies, and temperature control.
+[NEW] llm/providers/: Implement providers for OpenAI, Claude (Anthropic), Gemini, Qwen, Kimi, DeepSeek, OpenRouter, and Mock.
+2. Repository Analysis & Code Intelligence (repository/)
+[NEW] repository/analyzer.py: Analyzes directory trees, languages, framework markers, dependencies, tests, build configurations, and outputs repository-analysis.md.
+[NEW] repository/scanner.py: AST symbol extraction, dependency graph analysis, and code search.
+3. Sandboxed Execution Layer (sandbox/)
+[NEW] sandbox/docker_manager.py: Docker container management via Docker SDK with fallback, memory/CPU limit enforcement, network isolation, and non-root execution.
+[NEW] sandbox/executor.py: Unified sandbox executor integrating container isolation and host-level security confinement (inheriting and refining from existing sandbox.py).
+4. Specialized Agents & Autonomous Debug Loop (agent_core/)
+[NEW] agent_core/state.py: Lifecycle states (RequirementAnalysis, RepoAnalysis, Planning, Architecture, CodeGeneration, TestGeneration, TestExecution, Debugging, SecurityValidation, Deployment, Completed, Failed).
+[NEW] agent_core/workflow.py: Graph-based state machine with transition guards and auto-refinement limits.
+[NEW] agent_core/memory.py: Short-term task context and persistent memory for architecture decisions and past fixes.
+[NEW] agent_core/agents/planner.py: Generates requirements.md, implementation-plan.md, testing-plan.md, security-plan.md.
+[NEW] agent_core/agents/architect.py: Produces Architecture Decision Records (architecture.md).
+[NEW] agent_core/agents/coder.py: Produces code with Implementation Summary (Files Changed, Design Reason, Potential Risks, Testing Approach).
+[NEW] agent_core/agents/tester.py: Generates unit, integration, and e2e test files with target coverage metrics.
+[NEW] agent_core/agents/debugger.py: Autonomous while tests_fail loop analyzing error traces, root-cause identification, patch application, and producing Debug Report.
+[NEW] agent_core/agents/security.py: AST security audit, secret scanning, Bandit/Semgrep rule evaluation, producing security-report.md.
+[NEW] agent_core/agents/deployment.py: Dockerfile/Compose/K8s generator, CI/CD workflow generator, deployment health validation.
+[NEW] agent_core/orchestrator.py: Central coordinator executing the complete SDLC loop and compiling the final Engineering Report.
+5. Testing & Security Engines (testing/ & security/)
+[NEW] testing/test_runner.py: Test runner for unittest and pytest with stdout/stderr capture and coverage estimation.
+[NEW] testing/browser_tester.py: Chrome/Playwright headless browser testing (enhancing existing web_tester.py).
+[NEW] security/scanner.py: AST-based vulnerability analysis (SQL injection, shell injection, weak crypto, hardcoded secrets).
+[NEW] deployment/deployer.py: Container & Kubernetes manifest validator and CI/CD workflow generator.
+6. Prompts & Skills Management (prompts/, skills/, Agent.md)
+[NEW] prompts/: Markdown prompts for planner, architect, coder, tester, debugger, security, deployment.
+[NEW] skills/: Skills for python-api-builder, react-builder, security-review.
+[NEW] Agent.md: Project-specific AI configuration defining coding, testing, security, and deployment rules.
+[NEW] SKILL.md: Root skill specification and index.
+7. FastAPI Platform Service (app/)
+[NEW] app/main.py: FastAPI server exposing /api/tasks, /api/tasks/{id}, /api/tasks/{id}/logs, /api/health.
+[NEW] app/routes.py: REST routes and WebSocket streaming for task progress.
+[NEW] app/schemas.py: Request and response schemas.
+8. Entrypoint, Dependencies & Tests
+[MODIFY] main.py: Update CLI to support the orchestrator, --server mode, --task, interactive REPL, and model selection.
+[MODIFY] README.md: Update documentation to showcase the full Autonomous Software Engineering Agent Platform.
+[NEW] requirements.txt: List all dependencies (FastAPI, Pydantic, SQLAlchemy, Docker, Redis, etc.).
+[NEW] docker-compose.yml: Multi-service compose file for running the platform with Redis, PostgreSQL, and Sandbox containers.
+[NEW] test_platform.py: Comprehensive test suite testing all agents, orchestrator loop, sandbox, security scanner, and LLM router.
+Verification Plan
+Automated Tests
+Run existing test suite: python3 -m unittest test_agent.py to ensure zero regressions.
+Run new comprehensive test suite: python3 -m unittest test_platform.py validating:
+Repository analysis (analyzer.py generating repository-analysis.md)
+Planner, Architect, Coder, Tester, Debugger, Security, Deployment agent execution
+Autonomous debugging loop with patch generation and verification
+Multi-LLM provider abstraction and router fallback
+Docker manager and sandbox execution safety
+Final Engineering Report generation
+Agent.md reading and rule application
+Skills discovery and execution
+Manual Verification
+Execute a sample autonomous engineering run via CLI: python3 main.py --task "Implement a rate limiter module with unit tests and security validation"
+Verify generated artifacts in docs/ and reports/.
+
+---
+
 ## Quickstart
 
 ### 1. Using Free OpenRouter AI Models (Recommended & Zero Cost)

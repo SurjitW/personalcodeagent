@@ -1,6 +1,4 @@
-"""
-Backward compatibility shim for sandbox module.
-"""
+from sandbox.docker_manager import DockerSandboxConfig, DockerSandboxManager
 from sandbox.executor import (
     SandboxPolicy,
     validate_path,
@@ -8,7 +6,6 @@ from sandbox.executor import (
     execute_sandboxed_command,
     SandboxExecutor,
 )
-from sandbox.docker_manager import DockerSandboxConfig, DockerSandboxManager
 
 __all__ = [
     "DockerSandboxConfig",
