@@ -1,0 +1,7 @@
+[project]
+name = "personalcodeagent"
+version = "0.1.0"
+description = "Infosoft Consultancy llc, NJ AI coding agent"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
